@@ -86,4 +86,4 @@ focuspot-client/
 
 ## 🔗 관련 레포지토리
 
-- 백엔드: [focuspot-server](https://github.com/wjd15sheep/focuspot-server)
+- 백엔드: [focuspot-server](https://github.com/Focuspot/Focuspot-Server)
