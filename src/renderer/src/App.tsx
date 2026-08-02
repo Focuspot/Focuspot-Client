@@ -3,6 +3,7 @@ import StartScreen from './screens/StartScreen'
 import RoomScreen from './screens/RoomScreen'
 import ProfileSetup from './screens/ProfileSetup'
 import OverlayMain from './screens/OverlayMain'
+import ResultScreen from '@renderer/screens/ResultScreen'
 function App(): React.JSX.Element {
   return (
     <HashRouter>
@@ -11,6 +12,7 @@ function App(): React.JSX.Element {
         <Route path="/room" element={<RoomScreen />} />
         <Route path="/profile" element={<ProfileSetup />} />
         <Route path="/overlay" element={<OverlayMain />} />
+        <Route path="/result" element={<ResultScreen />} />
       </Routes>
     </HashRouter>
   )

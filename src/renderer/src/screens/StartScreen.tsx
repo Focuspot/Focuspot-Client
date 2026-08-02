@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../store/useAppStore'
 import DraggableLayout from '../components/DraggableLayout'
+import ExitButton from '@renderer/components/ExitButton'
 
 function StartScreen(): React.JSX.Element {
   const navigate = useNavigate()
@@ -37,6 +38,7 @@ function StartScreen(): React.JSX.Element {
         >
           같이하기
         </button>
+        <ExitButton />
       </div>
     </DraggableLayout>
   )

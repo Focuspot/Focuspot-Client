@@ -28,6 +28,11 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
+  ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.on('resize-overlay', () => mainWindow.setSize(180, 240))
+  ipcMain.on('resize-setup', () => mainWindow.setSize(420, 680))
+  ipcMain.on('quit-app', () => app.quit())
+
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -50,9 +55,6 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
-
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
 
   createWindow()
 
