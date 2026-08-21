@@ -13,19 +13,22 @@
 ## 📌 프로젝트 소개
 
 FocusPot은 유튜브 PiP처럼 **화면 위에 항상 떠있는 오버레이 앱**입니다.  
-친구들과 방 코드를 공유하면 각자의 캐릭터(고양이/햄스터/강아지)와 타이머가 실시간으로 동기화됩니다.  
+친구들과 방 코드를 공유하고, 각자의 캐릭터(고양이/햄스터/강아지)와 타이머를 함께 표시하며 집중해요.  
 공부, 작업, 무엇이든 — 혼자지만 함께하는 느낌으로.
+
+> ⚠️ 현재 버전은 화면 흐름(방 생성/참가, 프로필 설정, 오버레이, 결과) 및 로컬 타이머까지 구현된 **프론트엔드 프로토타입**입니다.  
+> 방 코드 서버 검증, 실시간 동기화(WebSocket) 연동은 백엔드([focuspot-server](https://github.com/Focuspot/Focuspot-Server)) 연결 후 추가될 예정입니다.
 
 ---
 
 ## 🖥️ 주요 기능
 
 - 항상 최상단 투명 오버레이 (어떤 앱 위에서도 보임)
-- 6자리 코드로 방 생성 및 친구 초대
+- 6자리 코드로 방 생성 및 참가 화면 (현재는 로컬 생성/입력, 서버 연동 예정)
 - 기본 캐릭터 3종 (고양이 / 햄스터 / 강아지) 또는 직접 이미지/GIF 업로드
-- 실시간 타이머 동기화 (클릭으로 정지/재개)
-- 말풍선으로 텍스트 + 이모지 공유
-- 로그인 없이 닉네임만으로 바로 참여
+- 클릭으로 정지/재개되는 집중 타이머 (현재는 로컬 동작, 실시간 동기화는 백엔드 연동 예정)
+- 말풍선으로 한마디 텍스트 공유
+- 닉네임만 입력하면 바로 시작 가능 (별도 로그인 절차 없음)
 
 ---
 
@@ -38,7 +41,8 @@ FocusPot은 유튜브 PiP처럼 **화면 위에 항상 떠있는 오버레이 �
 | Vite | 빌드 도구 |
 | Tailwind CSS | 스타일링 |
 | Zustand | 전역 상태 관리 |
-| STOMP.js | WebSocket 실시간 통신 |
+| React Router (HashRouter) | 화면 전환 라우팅 |
+| STOMP.js | WebSocket 실시간 통신 (의존성 추가됨, 연동 예정) |
 
 ---
 
@@ -57,11 +61,13 @@ npm install
 # 개발 모드 실행
 npm run dev
 
-# 빌드
+# 빌드 (타입체크 + electron-vite build)
 npm run build
 
-# 패키징 (.exe / .dmg)
-npm run package
+# 패키징
+npm run build:win    # Windows (.exe)
+npm run build:mac    # macOS (.dmg)
+npm run build:linux  # Linux (AppImage)
 ```
 
 ---
@@ -70,16 +76,22 @@ npm run package
 
 ```
 focuspot-client/
-├── electron/
-│   ├── main.ts         # Electron Main Process
-│   └── preload.ts      # IPC 브릿지
 ├── src/
-│   ├── pages/          # StartScreen, ProfileSetup, OverlayMain
-│   ├── components/     # FriendCard, Timer, SpeechBubble 등
-│   ├── store/          # Zustand 상태 관리
-│   ├── hooks/          # useWebSocket 등
-│   └── api/            # HTTP REST 요청
-└── vite.config.ts
+│   ├── main/
+│   │   └── index.ts         # Electron Main Process (창 생성, IPC 핸들러)
+│   ├── preload/
+│   │   ├── index.ts         # IPC 브릿지 (contextBridge)
+│   │   └── index.d.ts       # preload 타입 선언
+│   └── renderer/
+│       ├── index.html
+│       └── src/
+│           ├── main.tsx         # React 엔트리 포인트
+│           ├── App.tsx          # 라우터 (StartScreen/RoomScreen/ProfileSetup/OverlayMain/ResultScreen)
+│           ├── screens/          # StartScreen, RoomScreen, ProfileSetup, OverlayMain, ResultScreen
+│           ├── components/       # DraggableLayout, ExitButton, Versions
+│           ├── store/            # useAppStore (Zustand 전역 상태)
+│           └── assets/           # 캐릭터 이미지, CSS 등
+└── electron.vite.config.ts
 ```
 
 ---
