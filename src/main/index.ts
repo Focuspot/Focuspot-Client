@@ -32,6 +32,10 @@ function createWindow(): void {
   ipcMain.on('resize-overlay', () => mainWindow.setSize(180, 240))
   ipcMain.on('resize-setup', () => mainWindow.setSize(420, 680))
   ipcMain.on('quit-app', () => app.quit())
+  ipcMain.on('resize-result', () => {
+    mainWindow.setSize(420, 680)
+    mainWindow.center()
+  })
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.

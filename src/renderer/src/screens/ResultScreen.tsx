@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../store/useAppStore'
+import { useEffect } from 'react'
 import DraggableLayout from '../components/DraggableLayout'
 import ExitButton from '../components/ExitButton'
 import catImg from '../assets/characters/cat.png'
@@ -27,6 +28,10 @@ function ResultScreen(): React.JSX.Element {
   const totalSeconds = useAppStore((state) => state.totalSeconds)
 
   const characterImage = customImage ?? CHARACTER_IMAGES[character as keyof typeof CHARACTER_IMAGES]
+
+  useEffect(() => {
+    window.electron.ipcRenderer.send('resize-result')
+  }, [])
 
   return (
     <DraggableLayout className="items-center justify-center px-7 gap-5">
