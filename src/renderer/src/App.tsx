@@ -4,7 +4,11 @@ import RoomScreen from './screens/RoomScreen'
 import ProfileSetup from './screens/ProfileSetup'
 import OverlayMain from './screens/OverlayMain'
 import ResultScreen from '@renderer/screens/ResultScreen'
+import { useApplyTheme } from './hooks/useTheme'
+
 function App(): React.JSX.Element {
+  useApplyTheme()
+
   return (
     <HashRouter>
       <Routes>

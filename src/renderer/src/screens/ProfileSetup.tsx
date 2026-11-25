@@ -74,7 +74,7 @@ function ProfileSetup(): React.JSX.Element {
               <button
                 key={c.id}
                 onClick={() => handleSelectDefault(c.id)}
-                className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 bg-white py-3.5 transition ${
+                className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 bg-surface py-3.5 transition ${
                   selected
                     ? 'border-clay shadow-card'
                     : 'border-transparent shadow-card hover:border-cream-300'
@@ -130,7 +130,7 @@ function ProfileSetup(): React.JSX.Element {
               {fileName ?? '내 이미지 올리기'}
             </span>
             <span className="block text-[11px] text-ink-muted">
-              PNG · JPG · GIF — 이번 세션에서만 사용돼요
+              PNG · JPG · GIF — 이 컴퓨터에만 저장돼요
             </span>
           </span>
         </label>

@@ -60,7 +60,7 @@ function RoomScreen(): React.JSX.Element {
             key={id}
             onClick={() => setTab(id)}
             className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition ${
-              tab === id ? 'bg-white text-ink shadow-card' : 'text-ink-muted hover:text-ink-soft'
+              tab === id ? 'bg-surface text-ink shadow-card' : 'text-ink-muted hover:text-ink-soft'
             }`}
           >
             {label}
@@ -77,7 +77,7 @@ function RoomScreen(): React.JSX.Element {
             </p>
             <button
               onClick={handleCopy}
-              className="mt-3 rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink-soft shadow-card transition hover:text-clay-dark"
+              className="mt-3 rounded-full bg-surface px-3 py-1 text-xs font-semibold text-ink-soft shadow-card transition hover:text-clay-dark"
             >
               {copied ? '복사됐어요 ✓' : '코드 복사'}
             </button>

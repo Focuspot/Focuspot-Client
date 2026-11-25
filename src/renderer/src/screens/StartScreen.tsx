@@ -3,6 +3,7 @@ import { useAppStore } from '../store/useAppStore'
 import DraggableLayout from '../components/DraggableLayout'
 import ExitButton from '../components/ExitButton'
 import Logo, { Wordmark } from '../components/Logo'
+import ThemeToggle from '../components/ThemeToggle'
 
 function StartScreen(): React.JSX.Element {
   const navigate = useNavigate()
@@ -19,7 +20,8 @@ function StartScreen(): React.JSX.Element {
   }
 
   return (
-    <DraggableLayout className="px-8 pb-6">
+    <DraggableLayout className="relative px-8 pb-6">
+      <ThemeToggle className="absolute right-5 top-0" />
       <div className="flex flex-1 flex-col items-center justify-center">
         <div className="relative mb-5">
           <div className="absolute inset-x-5 bottom-2 h-3 rounded-full bg-cream-300/70 blur-[2px]" />

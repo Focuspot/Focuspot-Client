@@ -4,6 +4,46 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* 라이트 테마 (RGB 채널) */
+  --surface: 255 255 255;
+  --cream-50: 255 251 245;
+  --cream-100: 255 244 230;
+  --cream-200: 246 231 211;
+  --cream-300: 235 214 188;
+  --ink: 46 36 29;
+  --ink-soft: 111 95 82;
+  --ink-muted: 168 152 138;
+  --clay: 242 120 75;
+  --clay-dark: 227 95 53;
+  --clay-light: 255 227 214;
+  --sage: 111 175 123;
+  --sage-dark: 78 145 96;
+  --sage-light: 227 241 228;
+  --shadow: 46 36 29;
+  color-scheme: light;
+}
+
+:root.dark {
+  /* 다크 테마: 따뜻한 밤 화분 톤 */
+  --surface: 39 33 27;
+  --cream-50: 27 23 19;
+  --cream-100: 51 43 36;
+  --cream-200: 33 28 23;
+  --cream-300: 67 57 47;
+  --ink: 243 234 223;
+  --ink-soft: 201 187 172;
+  --ink-muted: 140 126 113;
+  --clay: 242 120 75;
+  --clay-dark: 245 145 105;
+  --clay-light: 90 48 33;
+  --sage: 104 168 117;
+  --sage-dark: 150 204 160;
+  --sage-light: 36 56 43;
+  --shadow: 0 0 0;
+  color-scheme: dark;
+}
+
 #root {
   width: 100%;
   height: 100vh;
@@ -16,19 +56,19 @@
       disabled:pointer-events-none disabled:opacity-40;
   }
   .btn-primary {
-    @apply btn bg-clay text-white shadow-press-clay hover:brightness-105;
+    @apply btn bg-clay text-white shadow-press-clay hover:brightness-105 dark:shadow-[0_3px_0_#B8492A];
   }
   .btn-sage {
     @apply btn bg-sage text-white shadow-press-sage hover:brightness-105;
   }
   .btn-secondary {
-    @apply btn border border-cream-300 bg-white text-ink shadow-press-cream hover:bg-cream-50;
+    @apply btn border border-cream-300 bg-surface text-ink shadow-press-cream hover:bg-cream-100;
   }
   .btn-ghost {
     @apply w-full rounded-xl py-2 text-xs font-medium text-ink-muted transition hover:text-clay-dark;
   }
   .field {
-    @apply w-full rounded-2xl border border-cream-300 bg-white px-4 py-3 text-sm text-ink outline-none
+    @apply w-full rounded-2xl border border-cream-300 bg-surface px-4 py-3 text-sm text-ink outline-none
       transition placeholder:text-ink-muted/70 focus:border-clay focus:ring-4 focus:ring-clay/15;
   }
   .label {

@@ -1,21 +1,20 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../store/useAppStore'
 import { formatTime, getCharacterImage } from '../characters'
+import { useStopwatch } from '../hooks/useStopwatch'
 
 function OverlayMain(): React.JSX.Element {
   const navigate = useNavigate()
   const nickname = useAppStore((state) => state.nickname)
   const character = useAppStore((state) => state.character)
   const customImage = useAppStore((state) => state.customImage)
-  const setTotalSeconds = useAppStore((state) => state.setTotalSeconds)
+  const finishSession = useAppStore((state) => state.finishSession)
 
-  const [seconds, setSeconds] = useState(0)
-  const [isRunning, setIsRunning] = useState(true)
+  const { seconds, isRunning, toggle, pause } = useStopwatch()
   const [bubble, setBubble] = useState('')
   const [showInput, setShowInput] = useState(false)
   const [bubbleInput, setBubbleInput] = useState('')
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const characterImage = getCharacterImage(character, customImage)
 
@@ -26,16 +25,8 @@ function OverlayMain(): React.JSX.Element {
     }
   }, [])
 
-  useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = setInterval(() => setSeconds((s) => s + 1), 1000)
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [isRunning])
+  // 컴퓨터가 잠자기/화면 잠금에 들어가면 자동 일시정지
+  useEffect(() => window.electron.ipcRenderer.on('system-pause', pause), [pause])
 
   const handleBubbleSubmit = (): void => {
     setBubble(bubbleInput.trim())
@@ -44,7 +35,7 @@ function OverlayMain(): React.JSX.Element {
   }
 
   const handleFinish = (): void => {
-    setTotalSeconds(seconds)
+    finishSession(seconds)
     navigate('/result')
   }
 
@@ -59,12 +50,12 @@ function OverlayMain(): React.JSX.Element {
         }}
       >
         {bubble ? (
-          <div className="relative rounded-2xl bg-white px-3 py-1.5 text-[11px] font-medium leading-snug text-ink shadow-float">
+          <div className="relative rounded-2xl bg-surface px-3 py-1.5 text-[11px] font-medium leading-snug text-ink shadow-float">
             <span className="line-clamp-2 break-all">{bubble}</span>
-            <span className="absolute -bottom-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 bg-white" />
+            <span className="absolute -bottom-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 bg-surface" />
           </div>
         ) : (
-          <div className="rounded-full border border-dashed border-ink-muted/60 bg-white/70 px-2.5 py-0.5 text-[10px] font-medium text-ink-soft backdrop-blur transition hover:bg-white">
+          <div className="rounded-full border border-dashed border-ink-muted/60 bg-surface/70 px-2.5 py-0.5 text-[10px] font-medium text-ink-soft backdrop-blur transition hover:bg-surface">
             + 한마디
           </div>
         )}
@@ -75,26 +66,26 @@ function OverlayMain(): React.JSX.Element {
         <img
           src={characterImage}
           alt="character"
-          className="h-16 w-16 rounded-full object-cover shadow-float ring-[3px] ring-white"
+          className="h-16 w-16 rounded-full object-cover shadow-float ring-[3px] ring-surface"
           draggable={false}
         />
         <span
-          className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-[3px] border-white ${
+          className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-[3px] border-surface ${
             isRunning ? 'bg-sage' : 'bg-amber-400'
           }`}
         />
       </div>
 
       {nickname && (
-        <p className="mt-1.5 max-w-[140px] truncate rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold text-ink-soft shadow-card backdrop-blur">
+        <p className="mt-1.5 max-w-[140px] truncate rounded-full bg-surface/85 px-2 py-0.5 text-[10px] font-semibold text-ink-soft shadow-card backdrop-blur">
           {nickname}
         </p>
       )}
 
       {/* 타이머 컨트롤 */}
-      <div className="no-drag mt-2 flex items-center gap-1 rounded-full bg-white py-1 pl-1 pr-1 shadow-float">
+      <div className="no-drag mt-2 flex items-center gap-1 rounded-full bg-surface py-1 pl-1 pr-1 shadow-float">
         <button
-          onClick={() => setIsRunning((prev) => !prev)}
+          onClick={toggle}
           title={isRunning ? '일시정지' : '다시 시작'}
           className="flex items-center gap-1.5 rounded-full px-2 py-1 transition hover:bg-cream-100"
         >
@@ -133,7 +124,7 @@ function OverlayMain(): React.JSX.Element {
               }}
               placeholder="지금 뭐 하고 있나요?"
               autoFocus
-              className="mb-2 w-full rounded-xl border border-cream-300 bg-white px-2.5 py-1.5 text-[11px] text-ink outline-none focus:border-clay"
+              className="mb-2 w-full rounded-xl border border-cream-300 bg-surface px-2.5 py-1.5 text-[11px] text-ink outline-none focus:border-clay"
             />
             <div className="flex gap-1.5">
               <button

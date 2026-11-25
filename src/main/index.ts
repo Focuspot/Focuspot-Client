@@ -1,12 +1,68 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, powerMonitor, screen } from 'electron'
 import { join } from 'path'
+import { readFileSync, writeFileSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 
+// ── 창 위치 기억 ──────────────────────────────────────────
+type WindowMode = 'setup' | 'overlay'
+type Point = { x: number; y: number }
+
+const SIZES: Record<WindowMode, { width: number; height: number }> = {
+  setup: { width: 420, height: 680 },
+  overlay: { width: 180, height: 240 }
+}
+
+const statePath = (): string => join(app.getPath('userData'), 'window-state.json')
+
+function loadPositions(): Partial<Record<WindowMode, Point>> {
+  try {
+    return JSON.parse(readFileSync(statePath(), 'utf-8'))
+  } catch {
+    return {}
+  }
+}
+
+function savePositions(positions: Partial<Record<WindowMode, Point>>): void {
+  try {
+    writeFileSync(statePath(), JSON.stringify(positions))
+  } catch {
+    // ignore
+  }
+}
+
+/** 저장된 위치가 현재 연결된 모니터 안에 있을 때만 사용 */
+function isVisible(pos: Point, mode: WindowMode): boolean {
+  const { width, height } = SIZES[mode]
+  return screen.getAllDisplays().some(({ workArea: a }) => {
+    const cx = pos.x + width / 2
+    const cy = pos.y + height / 2
+    return cx >= a.x && cx <= a.x + a.width && cy >= a.y && cy <= a.y + a.height
+  })
+}
+
+function defaultPosition(mode: WindowMode): Point {
+  const a = screen.getPrimaryDisplay().workArea
+  const { width, height } = SIZES[mode]
+  if (mode === 'overlay') return { x: a.x + a.width - width - 24, y: a.y + 24 } // 오른쪽 위
+  return {
+    x: Math.round(a.x + (a.width - width) / 2),
+    y: Math.round(a.y + (a.height - height) / 2)
+  }
+}
+
 function createWindow(): void {
+  const positions = loadPositions()
+  let mode: WindowMode = 'setup'
+  const positionFor = (m: WindowMode): Point => {
+    const saved = positions[m]
+    return saved && isVisible(saved, m) ? saved : defaultPosition(m)
+  }
+  const setupPos = positionFor('setup')
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 420,
-    height: 680,
+    ...SIZES.setup,
+    ...setupPos,
     alwaysOnTop: true,
     transparent: true,
     frame: false,
@@ -28,14 +84,34 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  ipcMain.on('ping', () => console.log('pong'))
-  ipcMain.on('resize-overlay', () => mainWindow.setSize(180, 240))
-  ipcMain.on('resize-setup', () => mainWindow.setSize(420, 680))
-  ipcMain.on('quit-app', () => app.quit())
-  ipcMain.on('resize-result', () => {
-    mainWindow.setSize(420, 680)
-    mainWindow.center()
+  const switchMode = (next: WindowMode): void => {
+    if (mode === next) return
+    mode = next
+    mainWindow.setBounds({ ...SIZES[next], ...positionFor(next) })
+  }
+
+  // 사용자가 창을 옮기면 모드별로 위치 저장
+  let saveTimer: ReturnType<typeof setTimeout> | null = null
+  mainWindow.on('moved', () => {
+    const [x, y] = mainWindow.getPosition()
+    positions[mode] = { x, y }
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = setTimeout(() => savePositions(positions), 300)
   })
+
+  // 잠자기/화면 잠금 시 타이머 자동 일시정지
+  const pauseTimer = (): void => mainWindow.webContents.send('system-pause')
+  powerMonitor.on('suspend', pauseTimer)
+  powerMonitor.on('lock-screen', pauseTimer)
+  mainWindow.on('closed', () => {
+    powerMonitor.off('suspend', pauseTimer)
+    powerMonitor.off('lock-screen', pauseTimer)
+  })
+
+  ipcMain.on('resize-overlay', () => switchMode('overlay'))
+  ipcMain.on('resize-setup', () => switchMode('setup'))
+  ipcMain.on('resize-result', () => switchMode('setup'))
+  ipcMain.on('quit-app', () => app.quit())
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
