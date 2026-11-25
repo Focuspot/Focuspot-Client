@@ -1,23 +1,15 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../store/useAppStore'
-import { useEffect } from 'react'
 import DraggableLayout from '../components/DraggableLayout'
 import ExitButton from '../components/ExitButton'
-import catImg from '../assets/characters/cat.png'
-import hamsterImg from '../assets/characters/hamster.png'
-import dogImg from '../assets/characters/dog.png'
+import { formatTime, getCharacterImage } from '../characters'
 
-const CHARACTER_IMAGES = {
-  cat: catImg,
-  hamster: hamsterImg,
-  dog: dogImg
-}
-
-function formatTime(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+function getMessage(seconds: number): string {
+  if (seconds >= 3600 * 2) return '오늘 화분이 활짝 피었어요 🌸'
+  if (seconds >= 3600) return '쑥쑥 자랐어요! 대단해요 🌿'
+  if (seconds >= 60 * 25) return '새싹이 돋았어요 🌱'
+  return '작은 한 걸음도 소중해요 🌱'
 }
 
 function ResultScreen(): React.JSX.Element {
@@ -27,34 +19,40 @@ function ResultScreen(): React.JSX.Element {
   const customImage = useAppStore((state) => state.customImage)
   const totalSeconds = useAppStore((state) => state.totalSeconds)
 
-  const characterImage = customImage ?? CHARACTER_IMAGES[character as keyof typeof CHARACTER_IMAGES]
+  const characterImage = getCharacterImage(character, customImage)
 
   useEffect(() => {
     window.electron.ipcRenderer.send('resize-result')
   }, [])
 
   return (
-    <DraggableLayout className="items-center justify-center px-7 gap-5">
-      <p className="text-white/40 text-xs">오늘의 집중 결과</p>
+    <DraggableLayout className="px-7 pb-6">
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <p className="mb-16 rounded-full bg-sage-light px-3 py-1 text-xs font-semibold text-sage-dark">
+          오늘의 집중 결과
+        </p>
 
-      <img
-        src={characterImage}
-        alt="character"
-        className="w-20 h-20 rounded-full object-cover border-2 border-violet-400/40"
-      />
-
-      <div className="flex flex-col items-center gap-1">
-        <p className="text-white text-base font-medium">{nickname}</p>
-        <p className="text-white/50 text-xs">오늘 집중한 시간</p>
-        <p className="text-violet-300 text-3xl font-mono font-medium">{formatTime(totalSeconds)}</p>
+        <div className="w-full rounded-[28px] bg-white px-6 pb-7 pt-10 text-center shadow-card">
+          <div className="relative mx-auto -mt-20 mb-4 h-24 w-24">
+            <img
+              src={characterImage}
+              alt="character"
+              className="h-24 w-24 rounded-full object-cover shadow-float ring-4 ring-white"
+              draggable={false}
+            />
+          </div>
+          <p className="text-base font-bold">{nickname || '집중러'}</p>
+          <p className="mt-5 text-xs font-medium text-ink-muted">집중한 시간</p>
+          <p className="mt-1 font-mono text-[40px] font-bold leading-none tracking-tight text-clay-dark">
+            {formatTime(totalSeconds)}
+          </p>
+          <p className="mt-5 text-[13px] text-ink-soft">{getMessage(totalSeconds)}</p>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-3 w-56 mt-2">
-        <button
-          onClick={() => navigate('/')}
-          className="w-full py-3 rounded-xl bg-violet-400 text-white text-sm font-medium"
-        >
-          메인으로 돌아가기
+      <div className="mt-6 flex flex-col gap-3">
+        <button onClick={() => navigate('/')} className="btn-primary">
+          처음으로 돌아가기
         </button>
         <ExitButton />
       </div>

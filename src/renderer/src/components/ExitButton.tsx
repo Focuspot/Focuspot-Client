@@ -4,10 +4,7 @@ function ExitButton(): React.JSX.Element {
   }
 
   return (
-    <button
-      onClick={handleQuit}
-      className="w-full py-3 rounded-xl border border-red-400/40 bg-red-400/10 text-red-300 text-sm font-medium hover:bg-red-400/20"
-    >
+    <button onClick={handleQuit} className="btn-ghost">
       종료하기
     </button>
   )

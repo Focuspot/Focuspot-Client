@@ -1,22 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../store/useAppStore'
-import catImg from '../assets/characters/cat.png'
-import hamsterImg from '../assets/characters/hamster.png'
-import dogImg from '../assets/characters/dog.png'
-
-const CHARACTER_IMAGES = {
-  cat: catImg,
-  hamster: hamsterImg,
-  dog: dogImg
-}
-
-function formatTime(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-}
+import { formatTime, getCharacterImage } from '../characters'
 
 function OverlayMain(): React.JSX.Element {
   const navigate = useNavigate()
@@ -32,7 +17,7 @@ function OverlayMain(): React.JSX.Element {
   const [bubbleInput, setBubbleInput] = useState('')
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const characterImage = customImage ?? CHARACTER_IMAGES[character as keyof typeof CHARACTER_IMAGES]
+  const characterImage = getCharacterImage(character, customImage)
 
   useEffect(() => {
     window.electron.ipcRenderer.send('resize-overlay')
@@ -53,98 +38,113 @@ function OverlayMain(): React.JSX.Element {
   }, [isRunning])
 
   const handleBubbleSubmit = (): void => {
-    setBubble(bubbleInput)
+    setBubble(bubbleInput.trim())
     setShowInput(false)
     setBubbleInput('')
   }
 
+  const handleFinish = (): void => {
+    setTotalSeconds(seconds)
+    navigate('/result')
+  }
+
   return (
-    <div
-      className="flex flex-col h-screen items-center justify-center select-none relative"
-      style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
-    >
+    <div className="drag relative flex h-screen select-none flex-col items-center justify-center text-ink">
       {/* 말풍선 */}
-      <div
-        className="mb-2 cursor-pointer"
-        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      <button
+        className="no-drag mb-2 max-w-[150px]"
         onClick={() => {
           setBubbleInput(bubble)
           setShowInput(true)
         }}
       >
         {bubble ? (
-          <div className="bg-violet-600/70 text-violet-100 border border-violet-400/50 rounded-xl px-1 py-1 text-xs max-w-[130px] text-center">
-            {bubble}
+          <div className="relative rounded-2xl bg-white px-3 py-1.5 text-[11px] font-medium leading-snug text-ink shadow-float">
+            <span className="line-clamp-2 break-all">{bubble}</span>
+            <span className="absolute -bottom-1 left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 bg-white" />
           </div>
         ) : (
-          <div className="border border-dashed border-gray-300 rounded-xl px-3 py-1 text-xs text-gray-400">
+          <div className="rounded-full border border-dashed border-ink-muted/60 bg-white/70 px-2.5 py-0.5 text-[10px] font-medium text-ink-soft backdrop-blur transition hover:bg-white">
             + 한마디
           </div>
         )}
-      </div>
+      </button>
 
       {/* 캐릭터 */}
-      <img
-        src={characterImage}
-        alt="character"
-        className="w-16 h-16 rounded-full object-cover border-2 border-violet-400/40"
-      />
+      <div className={`relative ${isRunning ? 'animate-bob' : ''}`}>
+        <img
+          src={characterImage}
+          alt="character"
+          className="h-16 w-16 rounded-full object-cover shadow-float ring-[3px] ring-white"
+          draggable={false}
+        />
+        <span
+          className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-[3px] border-white ${
+            isRunning ? 'bg-sage' : 'bg-amber-400'
+          }`}
+        />
+      </div>
 
-      {/* 닉네임 */}
-      <p className="text-gray-400 text-[10px] mt-1">{nickname}</p>
+      {nickname && (
+        <p className="mt-1.5 max-w-[140px] truncate rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold text-ink-soft shadow-card backdrop-blur">
+          {nickname}
+        </p>
+      )}
 
-      {/* 타이머 + 나가기 */}
-      <div
-        className="flex items-center gap-2 mt-2"
-        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-      >
+      {/* 타이머 컨트롤 */}
+      <div className="no-drag mt-2 flex items-center gap-1 rounded-full bg-white py-1 pl-1 pr-1 shadow-float">
         <button
           onClick={() => setIsRunning((prev) => !prev)}
-          className={`text-sm font-mono px-2 py-1 rounded-lg border ${
-            isRunning
-              ? 'text-white border-green-400/50 bg-green-400/40'
-              : 'text-yellow-300 border-yellow-400/30 bg-yellow-400/10'
-          }`}
-          style={{ textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}
+          title={isRunning ? '일시정지' : '다시 시작'}
+          className="flex items-center gap-1.5 rounded-full px-2 py-1 transition hover:bg-cream-100"
         >
-          {formatTime(seconds)}
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              isRunning ? 'animate-pulse-dot bg-sage' : 'bg-amber-400'
+            }`}
+          />
+          <span
+            className={`font-mono text-[13px] font-bold tabular-nums ${
+              isRunning ? 'text-ink' : 'text-ink-muted'
+            }`}
+          >
+            {formatTime(seconds)}
+          </span>
         </button>
         <button
-          onClick={() => {
-            setTotalSeconds(seconds)
-            navigate('/result')
-          }}
-          className="text-gray-300 border rounded-lg px-2 py-1 border-red-400/50 bg-red-400/20 hover:text-red-400 text-sm"
+          onClick={handleFinish}
+          title="집중 끝내기"
+          className="flex h-6 w-6 items-center justify-center rounded-full bg-clay text-white transition hover:bg-clay-dark"
         >
-          ✕
+          <span className="h-2 w-2 rounded-[2px] bg-white" />
         </button>
       </div>
 
       {/* 말풍선 입력 팝업 */}
       {showInput && (
-        <div
-          className="absolute inset-0 flex items-end pb-4 justify-center"
-          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-        >
-          <div className="bg-[#22222c] border border-white/10 rounded-2xl p-4 w-[90%]">
+        <div className="no-drag absolute inset-0 flex items-end justify-center pb-3">
+          <div className="w-[92%] rounded-2xl border border-cream-300 bg-cream-50 p-2.5 shadow-float">
             <input
               value={bubbleInput}
-              onChange={(e) => setBubbleInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleBubbleSubmit()}
-              placeholder="한마디 입력..."
+              onChange={(e) => setBubbleInput(e.target.value.slice(0, 30))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleBubbleSubmit()
+                if (e.key === 'Escape') setShowInput(false)
+              }}
+              placeholder="지금 뭐 하고 있나요?"
               autoFocus
-              className="w-full bg-[#2c2c38] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none mb-3"
+              className="mb-2 w-full rounded-xl border border-cream-300 bg-white px-2.5 py-1.5 text-[11px] text-ink outline-none focus:border-clay"
             />
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <button
                 onClick={() => setShowInput(false)}
-                className="flex-1 py-2 rounded-xl border border-white/10 text-gray-300 text-xs"
+                className="flex-1 rounded-lg py-1.5 text-[11px] font-medium text-ink-muted hover:bg-cream-100"
               >
                 취소
               </button>
               <button
                 onClick={handleBubbleSubmit}
-                className="flex-1 py-2 rounded-xl bg-violet-400 text-gray-300 text-xs font-medium"
+                className="flex-1 rounded-lg bg-clay py-1.5 text-[11px] font-semibold text-white hover:bg-clay-dark"
               >
                 완료
               </button>
